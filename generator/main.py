@@ -1,10 +1,15 @@
 import os
+import sys
 
 from PIL import Image
 from threadArt import process_image
 
+import logging
+
 
 if __name__ == '__main__':
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
     image_path = "../target/horse.jpg"
     width = 4000
     pixel_size = 1
