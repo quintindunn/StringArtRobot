@@ -8,7 +8,8 @@ updates:
   - package-ecosystem: "" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "weekly"
+      interval: "daily"
+      time: "12:00"
     groups:
       python-packages:
         patterns:
