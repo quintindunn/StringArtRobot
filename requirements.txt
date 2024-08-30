@@ -1,2 +1,2 @@
 pillow>=10.4.0
-threadArt==1.0.4
+threadArt==1.1.2
