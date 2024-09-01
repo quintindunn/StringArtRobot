@@ -1,10 +1,9 @@
 import os
 import sys
 
-import cv2
 import cv2 as cv
 
-from threadArt import HalfmontyAlgorithm
+from threadArt import KasperMeertsAlgorithm
 
 import logging
 
@@ -18,6 +17,8 @@ if __name__ == '__main__':
     max_strings = 4000
     nail_skip = 30
     line_weight = 20
+    min_distance = 20
+    min_loop = 20
 
     result_file = "../output/results.txt"
     result_img = "../output/result.png"
@@ -29,16 +30,28 @@ if __name__ == '__main__':
         "Number of Nails": number_of_nails,
         "Max Strings": max_strings,
         "Nail Skip": nail_skip,
-        "Line Weight": line_weight
+        "Line Weight": line_weight,
+        "Min Distance": min_distance,
+        "Min Loop": min_loop,
+        "User Visualizer": use_visualizer
     }
 
     for k, v in settings.items():
         print(f"{k}: {v}")
 
-    im = cv.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    im = cv.imread(image_path)
 
-    seq = HalfmontyAlgorithm(im, pin_count=number_of_nails, min_distance=nail_skip, max_lines=max_strings,
-                             line_weight=line_weight, img_size=width, use_visualizer=True).run()
+    art = KasperMeertsAlgorithm(
+            im=im,
+            n_pins=number_of_nails,
+            max_lines=max_strings,
+            line_weight=line_weight,
+            min_distance=min_distance,
+            min_loop=min_loop,
+            use_visualizer=True
+    )
+    art.run()
+    seq = art.sequence
 
     if not os.path.isdir("../output"):
         os.mkdir("../output/")
