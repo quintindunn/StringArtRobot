@@ -12,7 +12,4 @@
 std::vector<std::string> split(const std::string& content, const std::string& delimiter, int count);
 std::vector<std::string> split(const std::string& content, const std::string& delimiter);
 
-std::string get_xml_attribute(std::string content, std::string key);
-
-
 #endif //STRING_UTILS_H

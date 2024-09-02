@@ -10,8 +10,8 @@
 
 robot::robot() = default;
 
-void robot::parseInstruction(const std::string& instruction) {
-    std::vector<std::string> segments = split(instruction, " ");
+void robot::parseInstruction(const std::string& instructions) {
+    std::vector<std::string> segments = split(instructions, " ");
 
     const std::string& instruction = segments.at(0);
     for (const std::string& parameter : segments) {
