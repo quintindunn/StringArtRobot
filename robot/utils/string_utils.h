@@ -11,5 +11,6 @@
 
 std::vector<std::string> split(const std::string& content, const std::string& delimiter, int count);
 std::vector<std::string> split(const std::string& content, const std::string& delimiter);
+std::string toLower(std::string);
 
 #endif //STRING_UTILS_H

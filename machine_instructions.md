@@ -6,6 +6,8 @@
     * speed - 0-255 How quickly to rotate the table
 ### Instruction:
     * ROT d<direction> a<degrees> s<speed>
+ROT d<direction> a<degrees> s<speed>
+MT i<tool_id> x<delta_x> y<delta_y> s<speed>
 
 ## Place Nail:
 ### Parameters:

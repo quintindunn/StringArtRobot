@@ -3,27 +3,33 @@
 //
 
 #include "robot.h"
+#include "instructions/instructions.h"
 #include "utils/string_utils.h"
 
 #include <string>
 #include <vector>
 
-robot::robot() = default;
+Robot::Robot() = default;
+Robot::~Robot() = default;
 
-void robot::parseInstruction(const std::string& instructions) {
-    std::vector<std::string> segments = split(instructions, " ");
+void Robot::parseInstruction(const std::string& instructions) {
+    std::vector<std::string> segments = split(instructions, " ", 1);
+    const std::string instruction = toLower(segments.at(0));
 
-    const std::string& instruction = segments.at(0);
-    for (const std::string& parameter : segments) {
-
+    if (instruction == "rot") {
+        Rotate command = *new Rotate(segments);
     }
+    /*else if (instruction == "") {
+
+    } else if (instruction == "")*/
 }
 
 
-angle robot::getTableAngle() {
+angle Robot::getTableAngle() {
     return this->tableAngle;
 }
 
-angle robot::rotateTable(int degrees, int direction, int speed) {
-
+angle Robot::rotateTable(int degrees, int direction, int speed) {
+    return 0;
 }
+

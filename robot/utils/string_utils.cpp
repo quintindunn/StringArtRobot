@@ -4,12 +4,13 @@
 
 
 #include <iostream>
-#include <sstream>
+#include <locale>
 #include <vector>
 
 
 using std::string;
 using std::vector;
+
 
 
 vector<string> split(const string& content, const string& delimiter, int count) {
@@ -31,4 +32,12 @@ vector<string> split(const string& content, const string& delimiter, int count) 
 
 vector<string> split(const string& content, const string& delimiter) {
     return split(content, delimiter, -1);
+}
+
+
+string toLower(string s) {
+    const std::locale loc;
+    for(char &c : s)
+        c = std::tolower(c, loc);
+    return s;
 }
