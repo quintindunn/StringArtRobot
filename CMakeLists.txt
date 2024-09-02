@@ -14,4 +14,7 @@ add_executable(StringArtRobot
         robot/instructions/Rotate.h
         robot/instructions/instructions.h
         robot/instructions/PlaceNail.cpp
-        robot/instructions/PlaceNail.h)
+        robot/instructions/PlaceNail.h
+        robot/instructions/Beep.cpp
+        robot/instructions/Beep.h
+)

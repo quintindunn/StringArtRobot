@@ -13,7 +13,7 @@ Robot::Robot() = default;
 Robot::~Robot() = default;
 
 void Robot::parseInstruction(const std::string& instructions) {
-    std::vector<std::string> segments = split(instructions, " ", 1);
+    std::vector<std::string> segments = split(instructions, " ");
     const std::string instruction = toLower(segments.at(0));
 
     if (instruction == "rot") {
@@ -22,7 +22,7 @@ void Robot::parseInstruction(const std::string& instructions) {
     else if (instruction == "pn") {
         PlaceNail command = *new PlaceNail(segments);
     } else if (instruction == "bp") {
-
+        Beep command = *new Beep(segments);
     } else if (instruction == "sp") {
 
     }
