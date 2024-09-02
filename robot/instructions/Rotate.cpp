@@ -1,13 +1,15 @@
 //
 // Created by Quintin Dunn on 9/2/2024.
 //
-
+#include "instructions.h"
 #include "Rotate.h"
 #include "../utils/string_utils.h"
 
 #include <vector>
 #include <string>
 #include <format>
+#include <iostream>
+
 
 
 // ROT d<direction> a<degrees> s<speed>
@@ -27,8 +29,11 @@ Rotate::Rotate(std::vector<std::string> segments) {
             this->rate = value;
         }
     }
+#ifdef DEBUG_INSTRUCTIONS
+    std::cout << this->Rebuild() << std::endl;
+#endif
 }
 
 std::string Rotate::Rebuild() {
-    return std::format("ROT d% a% s%", this->direction, this->degrees, this->rate);
+    return std::format("ROT d{} a{} s{}", this->direction, this->degrees, this->rate);
 }

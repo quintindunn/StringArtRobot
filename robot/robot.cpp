@@ -19,9 +19,13 @@ void Robot::parseInstruction(const std::string& instructions) {
     if (instruction == "rot") {
         Rotate command = *new Rotate(segments);
     }
-    /*else if (instruction == "") {
+    else if (instruction == "pn") {
+        PlaceNail command = *new PlaceNail(segments);
+    } else if (instruction == "bp") {
 
-    } else if (instruction == "")*/
+    } else if (instruction == "sp") {
+
+    }
 }
 
 
