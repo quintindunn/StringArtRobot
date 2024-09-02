@@ -6,8 +6,6 @@
 #include "instructions.h"
 #include "robot.h"
 
-#include "../utils/string_utils.h"
-
 #include <format>
 #include <iostream>
 

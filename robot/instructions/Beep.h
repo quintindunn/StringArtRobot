@@ -1,5 +1,5 @@
 //
-// Created by Jason on 9/2/2024.
+// Created by Quintin Dunn on 9/2/2024.
 //
 
 #ifndef STRINGARTROBOT_BEEP_H
@@ -16,7 +16,7 @@ private:
     unsigned int repeat;
     duration off_time_ms;
 public:
-    Beep(std::vector<std::string>);
+    explicit Beep(std::vector<std::string>);
 
     void execute() override;
 

@@ -1,6 +1,7 @@
 //
 // Created by Quintin Dunn on 9/2/2024.
 //
+
 #include "instructions.h"
 #include "Rotate.h"
 
@@ -8,7 +9,6 @@
 #include <string>
 #include <format>
 #include <iostream>
-
 
 
 // ROT d<direction> a<degrees> s<speed>
