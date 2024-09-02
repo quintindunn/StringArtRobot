@@ -9,12 +9,15 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 
-class Sleep {
+class Sleep : public Command {
 private:
     duration duration_ms;
 public:
-    Sleep(std::vector<std::string>);
+    explicit Sleep(std::vector<std::string>);
+
+    void execute() override;
 
     std::string Rebuild();
 };

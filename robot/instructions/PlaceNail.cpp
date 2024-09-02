@@ -1,5 +1,5 @@
 //
-// Created by Jason on 9/2/2024.
+// Created by Quintin Dunn on 9/2/2024.
 //
 #include "PlaceNail.h"
 #include "instructions.h"
@@ -29,4 +29,8 @@ PlaceNail::PlaceNail(std::vector<std::string> segments) {
 
 std::string PlaceNail::Rebuild() {
     return std::format("PN p{} r{}", this->placeRate, this->retractRate);
+}
+
+void PlaceNail::execute() {
+    std::cout << "Executing " << this->Rebuild() << std::endl;
 }

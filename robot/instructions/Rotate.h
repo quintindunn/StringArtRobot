@@ -11,14 +11,16 @@
 
 
 // ROT d<direction> a<degrees> s<speed>
-class Rotate {
+class Rotate : public Command {
 private:
+    tool_id id;
     int direction;
     angle degrees;
     speed rate;
 public:
-    Rotate(std::vector<std::string>);
-    ~Rotate() = default;
+    explicit Rotate(std::vector<std::string>);
+
+    void execute() override;
 
     std::string Rebuild();
 };

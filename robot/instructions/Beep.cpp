@@ -1,5 +1,5 @@
 //
-// Created by Jason on 9/2/2024.
+// Created by Quintin Dunn on 9/2/2024.
 //
 
 #include "Beep.h"
@@ -34,4 +34,8 @@ Beep::Beep(std::vector<std::string> segments) {
 
 std::string Beep::Rebuild() {
     return std::format("BP d{} r{} o{}", this->durations_ms, this->repeat, this->off_time_ms);
+}
+
+void Beep::execute() {
+    std::cout << "Executing " << this->Rebuild() << std::endl;
 }

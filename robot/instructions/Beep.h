@@ -10,13 +10,15 @@
 #include <vector>
 #include <string>
 
-class Beep {
+class Beep : public Command {
 private:
     duration durations_ms;
     unsigned int repeat;
     duration off_time_ms;
 public:
     Beep(std::vector<std::string>);
+
+    void execute() override;
 
     std::string Rebuild();
 };

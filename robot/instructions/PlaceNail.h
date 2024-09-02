@@ -6,16 +6,19 @@
 #define STRINGARTROBOT_PLACENAIL_H
 
 #include "robot.h"
+#include "instructions.h"
 
 #include <string>
 #include <vector>
 
-class PlaceNail {
+class PlaceNail : public Command{
 private:
     speed placeRate;
     speed retractRate;
 public:
-    PlaceNail(std::vector<std::string> segments);
+    explicit PlaceNail(std::vector<std::string> segments);
+
+    void execute() override;
 
     std::string Rebuild();
 };

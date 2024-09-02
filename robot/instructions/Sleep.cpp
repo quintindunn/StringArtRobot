@@ -1,5 +1,5 @@
 //
-// Created by Jason on 9/2/2024.
+// Created by Quintin Dunn on 9/2/2024.
 //
 
 #include "Sleep.h"
@@ -24,4 +24,8 @@ Sleep::Sleep(std::vector<std::string> segments) {
 
 std::string Sleep::Rebuild() {
     return std::format("SP d{}", this->duration_ms);
+}
+
+void Sleep::execute() {
+    std::cout << "Executing " << this->Rebuild() << std::endl;
 }

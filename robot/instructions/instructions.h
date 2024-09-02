@@ -8,9 +8,16 @@
 
 typedef unsigned long duration;
 
+class Command {
+public:
+    virtual void execute() = 0;
+    virtual ~Command() = default;
+};
+
 #include "Rotate.h"
 #include "PlaceNail.h"
 #include "Beep.h"
+#include "Sleep.h"
 
 #include "../utils/string_utils.h"
 

@@ -16,18 +16,21 @@ void Robot::parseInstruction(const std::string& instructions) {
     std::vector<std::string> segments = split(instructions, " ");
     const std::string instruction = toLower(segments.at(0));
 
+    Command* command = nullptr;
+
     if (instruction == "rot") {
-        Rotate command = *new Rotate(segments);
-    }
-    else if (instruction == "pn") {
-        PlaceNail command = *new PlaceNail(segments);
+        command = new Rotate(segments);
+    } else if (instruction == "pn") {
+        command = new PlaceNail(segments);
     } else if (instruction == "bp") {
-        Beep command = *new Beep(segments);
+        command = new Beep(segments);
     } else if (instruction == "sp") {
-
+        command = new Sleep(segments);
     }
-}
 
+    if (command != nullptr)
+        command->execute();
+}
 
 angle Robot::getTableAngle() {
     return this->tableAngle;
