@@ -17,4 +17,6 @@ add_executable(StringArtRobot
         robot/instructions/PlaceNail.h
         robot/instructions/Beep.cpp
         robot/instructions/Beep.h
+        robot/instructions/Sleep.cpp
+        robot/instructions/Sleep.h
 )

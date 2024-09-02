@@ -12,4 +12,6 @@ typedef unsigned long duration;
 #include "PlaceNail.h"
 #include "Beep.h"
 
+#include "../utils/string_utils.h"
+
 #endif //STRINGARTROBOT_INSTRUCTIONS_H
