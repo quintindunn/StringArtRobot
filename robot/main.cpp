@@ -7,6 +7,7 @@
 int main() {
     Robot robot = *new Robot();
     Robot::parseInstruction("ROT i1 d1 a51 s255");
+    Robot::parseInstruction("ROT i2 d-1 a212 s125");
     Robot::parseInstruction("PN p255 r255");
     Robot::parseInstruction("BP d100 r5 o1000");
     Robot::parseInstruction("SP d1000");
