@@ -6,6 +6,7 @@
 #include "instructions.h"
 #include "robot.h"
 
+
 #include <format>
 #include <iostream>
 
@@ -30,8 +31,9 @@ Beep::Beep(std::vector<std::string> segments) {
 #endif
 }
 
-std::string Beep::Rebuild() {
-    return std::format("BP d{} r{} o{}", this->durations_ms, this->repeat, this->off_time_ms);
+std::string Beep::Rebuild() const {
+    return "BP d" + std::to_string(this->durations_ms) + " r" + std::to_string(this->repeat) + " o" +
+    std::to_string(this->off_time_ms);
 }
 
 void Beep::execute() {

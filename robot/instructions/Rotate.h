@@ -22,7 +22,7 @@ public:
 
     void execute() override;
 
-    std::string Rebuild();
+    std::string Rebuild() const;
 };
 
 

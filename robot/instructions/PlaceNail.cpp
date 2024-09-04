@@ -6,6 +6,7 @@
 #include "instructions.h"
 
 #include <format>
+#include <sstream>
 #include <iostream>
 
 // PN p<ps> r<rs>
@@ -27,8 +28,8 @@ PlaceNail::PlaceNail(std::vector<std::string> segments) {
 #endif
 }
 
-std::string PlaceNail::Rebuild() {
-    return std::format("PN p{} r{}", this->placeRate, this->retractRate);
+std::string PlaceNail::Rebuild() const {
+    return "PN p" + std::to_string(this->placeRate) + " r" + std::to_string(this->retractRate);
 }
 
 void PlaceNail::execute() {

@@ -5,7 +5,9 @@
 #include "Sleep.h"
 
 #include <format>
+#include <sstream>
 #include <iostream>
+
 
 Sleep::Sleep(std::vector<std::string> segments) {
     segments.erase(segments.begin());
@@ -22,8 +24,8 @@ Sleep::Sleep(std::vector<std::string> segments) {
 #endif
 }
 
-std::string Sleep::Rebuild() {
-    return std::format("SP d{}", this->duration_ms);
+std::string Sleep::Rebuild() const {
+    return "SP d" + std::to_string(this->duration_ms);
 }
 
 void Sleep::execute() {

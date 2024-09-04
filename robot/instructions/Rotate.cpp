@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <format>
+#include <sstream>
 #include <iostream>
 
 
@@ -36,8 +37,9 @@ Rotate::Rotate(std::vector<std::string> segments) {
 #endif
 }
 
-std::string Rotate::Rebuild() {
-    return std::format("ROT i{} d{} a{} s{}", this->id, this->direction, this->degrees, this->rate);
+std::string Rotate::Rebuild() const {
+    return "ROT i" + std::to_string(this->id) + " d" + std::to_string(this->direction) +
+    " a" + std::to_string(this->degrees) + " s" + std::to_string(this->rate);
 }
 
 void Rotate::execute() {
