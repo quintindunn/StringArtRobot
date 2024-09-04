@@ -5,8 +5,6 @@
 #include "PlaceNail.h"
 #include "instructions.h"
 
-#include <format>
-#include <sstream>
 #include <iostream>
 
 // PN p<ps> r<rs>
