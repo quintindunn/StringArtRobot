@@ -19,4 +19,7 @@ add_executable(StringArtRobot
         robot/instructions/Beep.h
         robot/instructions/Sleep.cpp
         robot/instructions/Sleep.h
+        robot/controls/rotation.cpp
+        robot/controls/controls.h
+        robot/controls/rotation.h
 )
