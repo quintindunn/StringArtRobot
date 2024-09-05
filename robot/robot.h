@@ -30,6 +30,8 @@ public:
     Robot();
     ~Robot();
 
+    void ParseMultilineString(const std::string &content);
+
     static void parseInstruction(const std::string& instruction);
 
 

@@ -12,6 +12,16 @@
 Robot::Robot() = default;
 Robot::~Robot() = default;
 
+void Robot::ParseMultilineString(const std::string& content) {
+    std::vector<std::string> lines = split(content, "\n");
+    for (std::string line: lines) {
+        if (line.starts_with("#")) {
+            continue;
+        }
+        this->parseInstruction(line);
+    }
+}
+
 void Robot::parseInstruction(const std::string& instructions) {
     std::vector<std::string> segments = split(instructions, " ");
     const std::string instruction = toLower(segments.at(0));
