@@ -22,6 +22,7 @@ This project was modeled in Fusion360, with schematics made with EasyEDA (WIP)
 - 1x 8” 2x4
 - 1x 9.5” 2x4
 - Bunch of screws (Types not decided yet)
+- 40mm x 0.45mm Sewing Needle
 - Ender 3 Pro X-Axis stepper motor
 - 3D printer & filament
 - MG996R with circular horn
