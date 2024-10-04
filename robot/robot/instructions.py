@@ -1,3 +1,5 @@
+from .hardware_api import move_tbl_degrees, ARM_TID, TBL_TID
+
 import logging
 import time
 
@@ -55,6 +57,10 @@ class BaseInstruction:
     def execute(self):
         raise NotImplementedError("Instruction not implemented!")
 
+    @property
+    def instruction(self):
+        return "#NOTIMPLEMENTED!"
+
 
 class RotateTool(BaseInstruction):
     def __init__(self, segments: list[str]):
@@ -110,6 +116,12 @@ class RotateTool(BaseInstruction):
     @property
     def instruction(self) -> str:
         return f"ROT i{self.tool_id} d{self.direction} a{self.degrees} s{self.speed}"
+
+    def execute(self):
+        if self.tool_id == ARM_TID:
+            pass
+        elif self.tool_id == TBL_TID:
+            move_tbl_degrees(degrees=self.degrees, direction=self.direction)
 
 
 class PlaceNail(BaseInstruction):
