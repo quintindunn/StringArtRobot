@@ -152,6 +152,9 @@ class PlaceNail(BaseInstruction):
     def instruction(self) -> str:
         return f"PN p{self.place_speed} r{self.retraction_speed}"
 
+    def execute(self):
+        raise NotImplementedError("Placing Nails has not been implemented!")
+
 
 class Beep(BaseInstruction):
     def __init__(self, segments: list[str]):
