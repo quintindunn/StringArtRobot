@@ -1,4 +1,4 @@
-from .hardware_api import move_tbl_degrees, ARM_TID, TBL_TID
+from .hardware_api import move_tbl_degrees, rotate_arm_to, ARM_TID, TBL_TID
 
 import logging
 import time
@@ -119,7 +119,7 @@ class RotateTool(BaseInstruction):
 
     def execute(self):
         if self.tool_id == ARM_TID:
-            pass
+            rotate_arm_to(degrees=self.degrees)
         elif self.tool_id == TBL_TID:
             move_tbl_degrees(degrees=self.degrees, direction=self.direction)
 
