@@ -1,3 +1,9 @@
+import logging
+import time
+
+logger = logging.getLogger("Instructions")
+
+
 def parse_multiline_str(instructions: str) -> list["BaseInstruction"]:
     commands = []
     for instruction in instructions.split("\n"):
@@ -15,18 +21,26 @@ def instruction_parser(instruction: str) -> "BaseInstruction":
     command = None
 
     if instruction_type == "rot":
+        logger.debug("Parsing RotateTool instruction.")
         command = RotateTool(segments)
     elif instruction_type == "pn":
+        logger.debug("Parsing PlaceNail instruction.")
         command = PlaceNail(segments)
     elif instruction_type == "bp":
+        logger.debug("Parsing Beep instruction.")
         command = Beep(segments)
     elif instruction_type == "sp":
+        logger.debug("Parsing Sleep instruction.")
         command = Sleep(segments)
+    else:
+        logger.warning(f"Instruction \"{instruction_type}\" not recognized")
 
     return command
 
 
 class Direction:
+    IGNORED = 0
+
     CW = 1
     CCW = -1
 
@@ -64,14 +78,14 @@ class RotateTool(BaseInstruction):
                 direction = value
             elif segment.startswith("a"):
                 i += 1
-                value = int(segment.split("a", 1)[1])
+                value = float(segment.split("a", 1)[1])
                 degrees = value
             elif segment.startswith("s"):
                 i += 1
                 value = int(segment.split("s", 1)[1])
                 speed = value
 
-        if direction not in (Direction.CW, Direction.CCW):
+        if direction not in (Direction.CW, Direction.CCW, Direction.IGNORED):
             raise ValueError(f"Direction \"{direction}\" not recognized")
 
         if degrees > 0:
@@ -179,3 +193,6 @@ class Sleep(BaseInstruction):
     @property
     def instruction(self):
         return f"SP d{self.duration_ms}"
+
+    def execute(self):
+        time.sleep(self.duration_ms/1000)
