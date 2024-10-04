@@ -1,6 +1,6 @@
 import logging
 
-from typing import Iterable, IO
+from typing import Iterable
 from .instructions import BaseInstruction, instruction_parser
 
 logger = logging.getLogger("robot.string_bot")

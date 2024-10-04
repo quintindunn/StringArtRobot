@@ -1,4 +1,4 @@
-from .hardware_api import move_tbl_degrees, rotate_arm_to, ARM_TID, TBL_TID
+from .hardware_api import move_tbl_degrees, rotate_arm_to, beep, ARM_TID, TBL_TID
 
 import logging
 import time
@@ -188,6 +188,15 @@ class Beep(BaseInstruction):
     @property
     def instruction(self):
         return f"BP d{self.durations_ms} r{self.repeat} o{self.off_time_ms}"
+
+    def execute(self):
+        count = 0
+        while count > self.repeat:
+            beep(self.durations_ms)
+
+            count += 1
+            if count > self.repeat:
+                time.sleep(self.off_time_ms/1000)
 
 
 class Sleep(BaseInstruction):
