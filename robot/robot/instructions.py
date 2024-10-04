@@ -1,3 +1,5 @@
+from typing import Union
+
 from .hardware_api import move_tbl_degrees, rotate_arm_to, beep, ARM_TID, TBL_TID
 
 import logging
@@ -14,8 +16,10 @@ def parse_multiline_str(instructions: str) -> list["BaseInstruction"]:
     return commands
 
 
-def instruction_parser(instruction: str) -> "BaseInstruction":
-    instruction = instruction.split("#")[0]
+def instruction_parser(instruction: str) -> Union["BaseInstruction", None]:
+    instruction = instruction.split("#")[0].lstrip(" ")
+    if not instruction:
+        return None
 
     segments = instruction.split(" ")
     instruction_type = segments[0].lower()
