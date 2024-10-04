@@ -10,5 +10,4 @@ if __name__ == '__main__':
     bot = StringBot()
     bot.file_path = "./horse.stringart"
 
-    print("Start!")
     bot.execute_file()
