@@ -36,17 +36,24 @@ class Direction:
     CW = 1
     CCW = -1
 
+    IGNORED = 0
+
     UP = 1
     DOWN = -1
 
 
 class BaseInstruction:
-    ...
+    @property
+    def instruction(self):
+        return ""
+
+    def __repr__(self):
+        return self.instruction
 
 
 class RotateTool(BaseInstruction):
     def __init__(self, tool_id: int, degrees: float, direction: int, speed: int):
-        if direction not in (Direction.CW, Direction.CCW):
+        if direction not in (Direction.CW, Direction.CCW, Direction.IGNORED):
             raise ValueError(f"Direction \"{direction}\" not recognized")
 
         if degrees > 0:
@@ -66,6 +73,10 @@ class RotateTool(BaseInstruction):
         # Not using direction = -direction so Direction's values can be adjusted if say we only want positive ints.
         if direction == Direction.CW:
             return Direction.CCW
+
+        if direction == Direction.IGNORED:
+            return Direction.IGNORED
+
         return Direction.CCW
 
     @property
@@ -87,6 +98,8 @@ class PlaceNail(BaseInstruction):
     def instruction(self) -> str:
         return f"PN p{self.place_speed} r{self.retraction_speed}"
 
+    def __str__(self):
+        return self.instruction
 
 class Beep(BaseInstruction):
     def __init__(self, duration_ms: int, repeat: int | None = None, off_time_ms: int = 100):
@@ -109,6 +122,9 @@ class Beep(BaseInstruction):
     def instruction(self):
         return f"BP d{self.duration} r{self.repeat} o{self.off_time}"
 
+    def __str__(self):
+        return self.instruction
+
 
 class Sleep(BaseInstruction):
     def __init__(self, duration_ms: int):
@@ -120,3 +136,6 @@ class Sleep(BaseInstruction):
     @property
     def instruction(self):
         return f"SP d{self.duration}"
+
+    def __str__(self):
+        return self.instruction

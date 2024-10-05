@@ -1,61 +1,113 @@
-import os
-import sys
+from instructions import Direction, RotateTool, BaseInstruction
+import argparse
 
-import cv2 as cv
 
-from threadArt import KasperMeertsAlgorithm
+def arg_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", help="Input file path")
+    parser.add_argument("-o", help="Output file path")
+    parser.add_argument("-pc", help="Number of pins.", type=int)
+    parser.add_argument("-faa", help="Forward Arm Angle.", type=float, default=150.0)
+    parser.add_argument("-baa", help="Backward Arm Angle.", type=float, default=30.0)
+    parser.add_argument("-atid", help="Arm Tool Id.", type=int, default=1)
+    parser.add_argument("-ttid", help="Table Tool Id.", type=int, default=0)
+    parser.add_argument("-abws", help="Arm Backward Speed", type=int, default=127)
+    parser.add_argument("-afws", help="Arm Forward Speed", type=int, default=127)
+    parser.add_argument("-tbsp", help="Table rotation speed", type=int, default=127)
 
-import logging
+    return parser.parse_args()
+
+
+def nail_to_angle(nail_idx: int):
+    nail_count = parsed_args.pc
+    nail_spacing_deg = 360 / nail_count
+    angle = nail_spacing_deg * nail_idx
+    return angle
+
+
+def calculate_relative_rotation(nail_index_1: int, nail_index_2: int) -> tuple[float, int | None]:
+    angle_1 = nail_to_angle(nail_index_1) % 360
+    angle_2 = nail_to_angle(nail_index_2) % 360
+
+    theta = ((angle_2 - angle_1) + 180) % 360 - 180
+    direction = Direction.CCW if theta > 0 else Direction.CW if theta < 0 else None
+    theta = abs(theta)
+
+    return theta, direction
+
+
+def move_to_nail_instruction(current_nail: int, target_nail: int, offset_angle: float = 0.0):
+    theta, direction = calculate_relative_rotation(current_nail, target_nail)
+    theta += offset_angle
+
+    return RotateTool(tool_id=parsed_args.ttid, direction=direction, speed=parsed_args.tbsp, degrees=theta)
+
+
+def servo_to_angle(deg: float, fw: bool = True):
+    speed = parsed_args.afws if fw else parsed_args.abws
+    return RotateTool(tool_id=parsed_args.atid, direction=Direction.IGNORED, degrees=deg, speed=speed)
+
+
+def rotate_table_degrees(degrees: int, direction: int, speed: int = 127):
+    return RotateTool(tool_id=parsed_args.ttid, degrees=degrees, direction=direction, speed=speed)
+
+
+def circle_nail_group(current_nail: int, target_nail: int):
+    # Go to the nail
+    instructions = []
+
+    spacing_offset = 360 / parsed_args.pc
+    middle_offset = spacing_offset / 2
+
+    # seq: A
+    instructions.append(RotateTool(tool_id=parsed_args.atid, degrees=parsed_args.baa, direction=Direction.IGNORED,
+                                   speed=parsed_args.abws))
+    # seq: B
+    instructions.append(move_to_nail_instruction(current_nail, target_nail, -middle_offset))
+
+    # seq: C
+    instructions.append(servo_to_angle(parsed_args.faa))
+
+    # seq: D
+    instructions.append(rotate_table_degrees(middle_offset * 2, instructions[1].direction, speed=parsed_args.tbsp))
+
+    # seq: E
+    instructions.append(servo_to_angle(parsed_args.baa, fw=False))
+
+    # seq: F
+    b_dir = instructions[1].direction
+    inv_direction = Direction.CCW if b_dir == Direction.CCW else Direction.CW if b_dir == Direction.CW else b_dir
+    instructions.append(rotate_table_degrees(middle_offset * 2, inv_direction, speed=parsed_args.tbsp))
+
+    # seq: G
+    instructions.append(servo_to_angle(parsed_args.faa, fw=True))
+
+    # seq: H
+    instructions.append(rotate_table_degrees(middle_offset, b_dir, speed=parsed_args.tbsp))
+
+    return instructions
+
+
+def construct():
+    current_nail = 0
+    with open(parsed_args.i) as f:
+        pins = list(map(int, f.read().split(",")))
+
+    instruction_groups = []
+
+    for pin in pins[1:]:
+        instruction_groups.append(f"# {current_nail} -> {pin}")
+        instruction_groups.extend(circle_nail_group(current_nail=current_nail, target_nail=pin))
+        current_nail = pin
+
+    return instruction_groups
+
+
+def dump(instruction_groups: list[str | BaseInstruction]):
+    with open(parsed_args.o, 'w') as f:
+        f.write("\n".join(map(str, instruction_groups)))
 
 
 if __name__ == '__main__':
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-
-    image_path = "../target/horse.jpg"
-    width = 500
-    number_of_nails = 288
-    max_strings = 4000
-    nail_skip = 30
-    line_weight = 20
-    min_distance = 20
-    min_loop = 20
-
-    result_file = "../output/results.txt"
-    result_img = "../output/result.png"
-
-    use_visualizer = True
-
-    settings = {
-        "Width": width,
-        "Number of Nails": number_of_nails,
-        "Max Strings": max_strings,
-        "Nail Skip": nail_skip,
-        "Line Weight": line_weight,
-        "Min Distance": min_distance,
-        "Min Loop": min_loop,
-        "User Visualizer": use_visualizer
-    }
-
-    for k, v in settings.items():
-        print(f"{k}: {v}")
-
-    im = cv.imread(image_path)
-
-    art = KasperMeertsAlgorithm(
-            im=im,
-            n_pins=number_of_nails,
-            max_lines=max_strings,
-            line_weight=line_weight,
-            min_distance=min_distance,
-            min_loop=min_loop,
-            use_visualizer=True
-    )
-    art.run()
-    seq = art.sequence
-
-    if not os.path.isdir("../output"):
-        os.mkdir("../output/")
-
-    with open(result_file, 'w') as f:
-        f.write(','.join(map(str, seq)))
-
+    parsed_args = arg_parser()
+    dump(construct())
