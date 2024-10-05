@@ -101,7 +101,6 @@ class PlaceNail(BaseInstruction):
     def __str__(self):
         return self.instruction
 
-
 class Beep(BaseInstruction):
     def __init__(self, duration_ms: int, repeat: int | None = None, off_time_ms: int = 100):
         if duration_ms < 0:
