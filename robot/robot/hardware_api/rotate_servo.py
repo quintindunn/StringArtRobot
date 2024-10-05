@@ -17,7 +17,7 @@ def rotate_arm_to(degrees: float):
         old = rotate_arm_to.arm_angle
         rotate_arm_to.arm_angle = degrees
 
-    # TODO: Implement fully.
+    # TODO: Implement servo rotation.
     logger.info(f"Rotating arm to {degrees:.3f} degrees")
 
     deg_difference = abs(old-degrees)

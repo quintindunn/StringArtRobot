@@ -5,6 +5,8 @@ COLUMNS = 20
 TMP_BUFFER = [""]*ROWS
 
 
+# TODO: Implement displaying onto LCD
+
 def clear():
     for i in range(ROWS):
         TMP_BUFFER[i] = ""
