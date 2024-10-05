@@ -16,6 +16,7 @@ MICRO_STEPS: int = 64
 
 STP_P_REV: int = BASE_STEPS_PER_REVOLUTION * MICRO_STEPS
 STP_P_DEG: float = STP_P_REV / 360
+DEG_P_STEP: float = 360 / STP_P_REV
 
 
 def sleep_micro_seconds(microseconds: int):
@@ -31,6 +32,8 @@ def step():
 def move_tbl_degrees(degrees: int, direction: int):
     if not hasattr(move_tbl_degrees, "error"):
         move_tbl_degrees.error = 0.0
+    if not hasattr(move_tbl_degrees, "current_angle"):
+        move_tbl_degrees.current_angle = 0.0
 
     if direction == instructions.Direction.CW:
         write_pin(pin=TBL_DIR_PIN, high=TBL_INVERT_DIRECTION)
@@ -66,6 +69,9 @@ def move_tbl_degrees(degrees: int, direction: int):
     steps_to_move = best_steps
 
     for _ in range(abs(steps_to_move)):
+        dir_val = -1 if instructions.Direction.CW else 1
+        move_tbl_degrees.current_angle = (move_tbl_degrees.current_angle + dir_val * DEG_P_STEP) % 360
+
         step()
         sleep_micro_seconds(TBL_STP_COOLDOWN_MICRO_SECONDS)
 

@@ -1,17 +1,35 @@
+import threading
 from typing import Any
+from .string_bot import StringBot
+from .hardware_api import move_tbl_degrees, rotate_arm_to
+from .instructions import Direction
+
+
+from pathlib import Path
 
 VERSION = "0.1.0"
 
 ROW_COUNT = 4
 BASE_Y_OFFSET = 1
 
-DEFAULT_BEHAVIOR = -1
-DO_NOTHING = -2
-PROGRAM_FLOW_CODE = 0
-TABLE_CW_FLOW_CODE = 1
-TABLE_CCW_FLOW_CODE = 2
-ARM_CW_FLOW_CODE = 3
-ARM_CCW_FLOW_CODE = 4
+TABLE_STEP_SIZE = 0.2    # deg
+ARM_STEP_SIZE = 1        # deg
+
+DEFAULT_BEHAVIOR = -1    # worlds easiest implemented
+DO_NOTHING = -2          # worlds easiest implemented
+PROGRAM_FLOW_CODE = 0    # implemented
+TABLE_CW_FLOW_CODE = 1   # NOT
+TABLE_CCW_FLOW_CODE = 2  # NOT
+ARM_CW_FLOW_CODE = 3     # NOT
+ARM_CCW_FLOW_CODE = 4    # NOT
+PAUSE_FLOW_CODE = 5      # implemented
+CANCEL_FLOW_CODE = 6     # implemented
+
+PAUSE_LINE_IDX = 1
+TABLE_ANGLE_LINE_IDX = 5
+ARM_ANGLE_LINE_IDX = 6
+
+BASE_FILE_PATH = Path("./stringart_files/")
 
 CTX = {
     "completed": 0.0,
@@ -36,7 +54,9 @@ class Page:
 
 
 class UI:
-    def __init__(self):
+    def __init__(self, robot: StringBot):
+        self.bot = robot
+
         self.home_page: Page = Page(lines=[], data_indices=[])
         self.status_page: Page = Page(lines=[], data_indices=[])
         self.controls_page: Page = Page(lines=[], data_indices=[])
@@ -47,6 +67,26 @@ class UI:
         self.current_page: Page = self.home_page
 
         self.init()
+
+    def flow_interpreter(self, code: int):
+        if code == PROGRAM_FLOW_CODE:
+            filename = self.current_page.lines[self.current_page.line_idx][0]
+            self.bot.file_path = BASE_FILE_PATH / filename
+            CTX['current_program'] = filename
+
+            thread = threading.Thread(target=self.bot.execute_file, daemon=True)
+            thread.start()
+        elif code == PAUSE_FLOW_CODE:
+            self.bot.pause = not self.bot.pause
+
+        elif code == CANCEL_FLOW_CODE:
+            self.bot.cancel = True
+
+        elif code in (ARM_CW_FLOW_CODE, ARM_CCW_FLOW_CODE):
+            direction = -1 if code == ARM_CW_FLOW_CODE else 1
+            current_angle = CTX['arm_angle']
+            new_angle = current_angle + (direction * ARM_STEP_SIZE)
+            rotate_arm_to(new_angle)
 
     def init_home_page(self):
         lines = [
@@ -75,6 +115,8 @@ class UI:
         self.status_page.data_indices.extend(data_indices)
 
     def update_status(self):
+        CTX['completed'] = self.bot.line_number / self.bot.line_count if self.bot.line_count else 0.0
+
         program_line = f"Program: {CTX['current_program']}"
         percent_line = f"Complete: {CTX['completed'] * 100:.2f}"
 
@@ -83,29 +125,40 @@ class UI:
 
     def init_controls_page(self):
         lines = [
-            ["Controls", self.controls_page],
+            ["Controls", self.controls_page],       # DO NOTHING
+            ["Pause", self.controls_page],          # PAUSE
+            ["Cancel", self.controls_page],         # CANCEL
             ["Table", self.table_controls_page],
             ["Arm", self.arm_controls_page],
-            ["Table Angle: ", self.controls_page],
-            ["Arm Angle: ", self.controls_page],
+            ["Table Angle: ", self.controls_page],  # DO NOTHING
+            ["Arm Angle: ", self.controls_page],    # DO NOTHING
             ["..", self.home_page]
         ]
 
         data_indices = [
             [0, DO_NOTHING],
-            [3, DO_NOTHING],
-            [4, DO_NOTHING]
+            [1, PAUSE_FLOW_CODE],
+            [2, CANCEL_FLOW_CODE],
+            [5, DO_NOTHING],
+            [6, DO_NOTHING]
         ]
 
         self.controls_page.lines.extend(lines)
         self.controls_page.data_indices.extend(data_indices)
 
     def update_controls(self):
-        table_angle = f"Table Angle: {CTX['table_angle'] * 360:.2f} DEG"
-        arm_angle = f"Arm Angle: {CTX['arm_angle'] * 360:.2f} DEG"
+        if hasattr(rotate_arm_to, "arm_angle"):
+            CTX['arm_angle'] = rotate_arm_to.arm_angle
+        if hasattr(move_tbl_degrees, "current_angle"):
+            CTX['table_angle'] = move_tbl_degrees.current_angle
 
-        self.controls_page.lines[3][0] = table_angle
-        self.controls_page.lines[4][0] = arm_angle
+        table_angle = f"Table Angle: {CTX['table_angle']:.2f} DEG"
+        arm_angle = f"Arm Angle: {CTX['arm_angle']:.2f} DEG"
+
+        self.controls_page.lines[PAUSE_LINE_IDX][0] = "Pause" if not self.bot.pause else "Unpause"
+
+        self.controls_page.lines[TABLE_ANGLE_LINE_IDX][0] = table_angle
+        self.controls_page.lines[ARM_ANGLE_LINE_IDX][0] = arm_angle
 
     def init_table_controls_page(self):
         lines = [
@@ -238,6 +291,7 @@ class UI:
 
             if code != -1:
                 print(f"DATALINE {self.current_page.lines[current_idx][0]}, CODE: {code}")
+                self.flow_interpreter(code)
             else:
                 self.current_page = self.current_page.lines[current_idx][1]
                 self.current_page.line_idx = 1

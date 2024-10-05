@@ -47,8 +47,8 @@ def instruction_parser(instruction: str) -> Union["BaseInstruction", None]:
 class Direction:
     IGNORED = 0
 
-    CW = 1
-    CCW = -1
+    CW = -1
+    CCW = 1
 
     UP = 1
     DOWN = -1
