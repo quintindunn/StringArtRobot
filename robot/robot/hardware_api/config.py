@@ -11,3 +11,5 @@ ARM_PIN = 9  # NEEDS PWM
 ARM_TID = 1
 ARM_TIME_PER_60_DEG = 0.17  # Seconds
 ARM_TIME_PER_60_DEG_SAFETY = 0.035  # Seconds
+
+DEV_NO_GPIO = True  # Disable GPIO usage for development
