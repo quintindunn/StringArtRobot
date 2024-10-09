@@ -1,4 +1,4 @@
-from instructions import Direction, RotateTool, BaseInstruction
+from instructions import Direction, RotateTool, Sleep, BaseInstruction
 import argparse
 
 
@@ -14,6 +14,7 @@ def arg_parser():
     parser.add_argument("-abws", help="Arm Backward Speed", type=int, default=127)
     parser.add_argument("-afws", help="Arm Forward Speed", type=int, default=127)
     parser.add_argument("-tbsp", help="Table rotation speed", type=int, default=127)
+    parser.add_argument("-tbcd", help="Time between table rotation and next instruction. (ms)", type=int, default=500)
 
     return parser.parse_args()
 
@@ -52,38 +53,55 @@ def rotate_table_degrees(degrees: int, direction: int, speed: int = 127):
     return RotateTool(tool_id=parsed_args.ttid, degrees=degrees, direction=direction, speed=speed)
 
 
+def if_tbcd_sleep(instructions: list[BaseInstruction]):
+    if parsed_args.tbcd != -1:
+        instructions.append(Sleep(duration_ms=parsed_args.tbcd))
+
+
 def circle_nail_group(current_nail: int, target_nail: int):
     # Go to the nail
     instructions = []
 
-    spacing_offset = 360 / parsed_args.pc
-    middle_offset = spacing_offset / 2
+    spacing = 360 / parsed_args.pc
+    d1 = Direction.CW
+    d2 = Direction.CCW
+    fw = parsed_args.faa
+    bw = parsed_args.baa
 
-    # seq: A
-    instructions.append(RotateTool(tool_id=parsed_args.atid, degrees=parsed_args.baa, direction=Direction.IGNORED,
-                                   speed=parsed_args.abws))
-    # seq: B
-    instructions.append(move_to_nail_instruction(current_nail, target_nail, -middle_offset))
+    # 1.) Rotate to the pin
+    instructions.append(move_to_nail_instruction(current_nail, target_nail))
+    if_tbcd_sleep(instructions)
 
-    # seq: C
-    instructions.append(servo_to_angle(parsed_args.faa))
+    # 2.) Rotate `d1` spacing/2deg
+    instructions.append(rotate_table_degrees(spacing/2, d1))
+    if_tbcd_sleep(instructions)
 
-    # seq: D
-    instructions.append(rotate_table_degrees(middle_offset * 2, instructions[1].direction, speed=parsed_args.tbsp))
+    # 3.) Arm from `fw`deg -> `bw`deg
+    instructions.append(servo_to_angle(bw, fw=False))
 
-    # seq: E
-    instructions.append(servo_to_angle(parsed_args.baa, fw=False))
+    # 4.) Rotate `d2` `spacing`deg
+    instructions.append(rotate_table_degrees(spacing, d2))
+    if_tbcd_sleep(instructions)
 
-    # seq: F
-    b_dir = instructions[1].direction
-    inv_direction = Direction.CCW if b_dir == Direction.CCW else Direction.CW if b_dir == Direction.CW else b_dir
-    instructions.append(rotate_table_degrees(middle_offset * 2, inv_direction, speed=parsed_args.tbsp))
+    # 5.) Arm from `bw`deg -> `fw`deg
+    instructions.append(servo_to_angle(fw, fw=True))
 
-    # seq: G
-    instructions.append(servo_to_angle(parsed_args.faa, fw=True))
+    # 6.) Rotate `d1` `spacing`deg
+    instructions.append(rotate_table_degrees(spacing, d1))
+    if_tbcd_sleep(instructions)
 
-    # seq: H
-    instructions.append(rotate_table_degrees(middle_offset, b_dir, speed=parsed_args.tbsp))
+    # 7.) Arm from `fw`deg -> `bw`deg
+    instructions.append(servo_to_angle(bw, fw=False))
+
+    # 8.) Rotate `d2` `spacing`deg
+    instructions.append(rotate_table_degrees(spacing, d2))
+
+    # 9.) Arm from `bw`deg to `fw`deg
+    instructions.append(servo_to_angle(fw, fw=True))
+
+    # 10.) Reset to initial angle.
+    instructions.append(rotate_table_degrees(spacing/2, d1))
+    if_tbcd_sleep(instructions)
 
     return instructions
 
