@@ -22,6 +22,8 @@ def rotate_arm_to(degrees: float):
         setattr(rotate_arm_to, "arm_angle", degrees)
         old = 0.0
     else:
+        degrees = max(-90.0, min(90.0, degrees)) / 90
+
         old = rotate_arm_to.arm_angle
         rotate_arm_to.arm_angle = degrees
 

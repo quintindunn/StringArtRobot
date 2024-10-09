@@ -1,4 +1,6 @@
-from instructions import Direction, RotateTool, BaseInstruction
+import requests
+
+from instructions import Direction, RotateTool, Sleep, BaseInstruction
 import argparse
 
 
@@ -7,13 +9,16 @@ def arg_parser():
     parser.add_argument("-i", help="Input file path")
     parser.add_argument("-o", help="Output file path")
     parser.add_argument("-pc", help="Number of pins.", type=int)
-    parser.add_argument("-faa", help="Forward Arm Angle.", type=float, default=150.0)
-    parser.add_argument("-baa", help="Backward Arm Angle.", type=float, default=30.0)
+    parser.add_argument("-faa", help="Forward Arm Angle.", type=float, default=10.0)
+    parser.add_argument("-baa", help="Backward Arm Angle.", type=float, default=-10.0)
     parser.add_argument("-atid", help="Arm Tool Id.", type=int, default=1)
     parser.add_argument("-ttid", help="Table Tool Id.", type=int, default=0)
     parser.add_argument("-abws", help="Arm Backward Speed", type=int, default=127)
     parser.add_argument("-afws", help="Arm Forward Speed", type=int, default=127)
     parser.add_argument("-tbsp", help="Table rotation speed", type=int, default=127)
+    parser.add_argument("-tbcd", help="Cooldown time between table rotation and another operation. (ms)", type=int,
+                        default=1500)
+    parser.add_argument("-upload", help="URL for upload", type=str, default="http://192.168.1.29:8080")
 
     return parser.parse_args()
 
@@ -59,31 +64,43 @@ def circle_nail_group(current_nail: int, target_nail: int):
     spacing_offset = 360 / parsed_args.pc
     middle_offset = spacing_offset / 2
 
-    # seq: A
-    instructions.append(RotateTool(tool_id=parsed_args.atid, degrees=parsed_args.baa, direction=Direction.IGNORED,
-                                   speed=parsed_args.abws))
-    # seq: B
-    instructions.append(move_to_nail_instruction(current_nail, target_nail, -middle_offset))
+    # reset servo to forward angle for travel
+    instructions.append(servo_to_angle(parsed_args.faa, fw=True))
 
-    # seq: C
-    instructions.append(servo_to_angle(parsed_args.faa))
+    # seq: B
+    instructions.append(move_to_nail_instruction(current_nail, target_nail))
+    reference_instruction = instructions[-1]
+    b_dir = reference_instruction.direction
+    inv_direction = Direction.CW if b_dir == Direction.CCW else Direction.CW if b_dir == Direction.CCW else b_dir
+
+    if parsed_args.tbcd != -1:
+        instructions.append(Sleep(duration_ms=parsed_args.tbcd))
 
     # seq: D
-    instructions.append(rotate_table_degrees(middle_offset * 2, instructions[1].direction, speed=parsed_args.tbsp))
+    instructions.append(rotate_table_degrees(middle_offset * 4, inv_direction, speed=parsed_args.tbsp))
+
+    if parsed_args.tbcd != -1:
+        instructions.append(Sleep(duration_ms=parsed_args.tbcd))
 
     # seq: E
     instructions.append(servo_to_angle(parsed_args.baa, fw=False))
 
     # seq: F
-    b_dir = instructions[1].direction
-    inv_direction = Direction.CCW if b_dir == Direction.CCW else Direction.CW if b_dir == Direction.CW else b_dir
+    b_dir = reference_instruction.direction
+    inv_direction = Direction.CW if b_dir == Direction.CCW else Direction.CW if b_dir == Direction.CCW else b_dir
     instructions.append(rotate_table_degrees(middle_offset * 2, inv_direction, speed=parsed_args.tbsp))
+
+    if parsed_args.tbcd != -1:
+        instructions.append(Sleep(duration_ms=parsed_args.tbcd))
 
     # seq: G
     instructions.append(servo_to_angle(parsed_args.faa, fw=True))
 
     # seq: H
     instructions.append(rotate_table_degrees(middle_offset, b_dir, speed=parsed_args.tbsp))
+
+    if parsed_args.tbcd != -1:
+        instructions.append(Sleep(duration_ms=parsed_args.tbcd))
 
     return instructions
 
@@ -111,3 +128,8 @@ def dump(instruction_groups: list[str | BaseInstruction]):
 if __name__ == '__main__':
     parsed_args = arg_parser()
     dump(construct())
+
+    if parsed_args.upload:
+        with open(parsed_args.o, 'rb') as f:
+            request = requests.post(parsed_args.upload, files={"files": f})
+            print(request, request.text)
