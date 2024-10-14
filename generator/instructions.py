@@ -56,7 +56,7 @@ class RotateTool(BaseInstruction):
         if direction not in (Direction.CW, Direction.CCW, Direction.IGNORED):
             raise ValueError(f"Direction \"{direction}\" not recognized")
 
-        if degrees > 0:
+        if degrees < 0:
             degrees = abs(degrees)
             direction = self._invert_direction(direction)
 
@@ -77,10 +77,11 @@ class RotateTool(BaseInstruction):
         if direction == Direction.IGNORED:
             return Direction.IGNORED
 
-        return Direction.CCW
+        return Direction.CW
 
     @property
     def instruction(self) -> str:
+        print(f"ROT i{self.tool_id} d{self.direction} a{self.degrees} s{self.speed}")
         return f"ROT i{self.tool_id} d{self.direction} a{self.degrees} s{self.speed}"
 
 
