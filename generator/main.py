@@ -132,6 +132,16 @@ def construct():
     return instruction_groups
 
 
+# TEMPORARY TO DEBUG NOT FIRMWARE NOT RECOGNIZING DIFFERENT DIRECTIONS.
+def debug_construct():
+    instructions = pre_processing()
+    for _ in range(10):
+        instructions.append(rotate_table_degrees(degrees=20, direction=Direction.CCW))
+        instructions.append(rotate_table_degrees(degrees=20, direction=Direction.CW))
+
+    return instructions
+
+
 def dump(instruction_groups: list[str | BaseInstruction]):
     with open(parsed_args.o, 'w') as f:
         f.write("\n".join(map(str, instruction_groups)))
@@ -139,7 +149,7 @@ def dump(instruction_groups: list[str | BaseInstruction]):
 
 if __name__ == '__main__':
     parsed_args = arg_parser()
-    dump(construct())
+    dump(debug_construct())
     if parsed_args.uploadurl:
         with open(parsed_args.o, 'rb') as f:
             request = requests.post(parsed_args.uploadurl, files={"files": f})
