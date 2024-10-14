@@ -149,7 +149,7 @@ def dump(instruction_groups: list[str | BaseInstruction]):
 
 if __name__ == '__main__':
     parsed_args = arg_parser()
-    dump(debug_construct())
+    dump(construct())
     if parsed_args.uploadurl:
         with open(parsed_args.o, 'rb') as f:
             request = requests.post(parsed_args.uploadurl, files={"files": f})

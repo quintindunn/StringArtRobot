@@ -56,7 +56,7 @@ class RotateTool(BaseInstruction):
         if direction not in (Direction.CW, Direction.CCW, Direction.IGNORED):
             raise ValueError(f"Direction \"{direction}\" not recognized")
 
-        if degrees < 0:
+        if degrees < 0 and direction != Direction.IGNORED:
             degrees = abs(degrees)
             direction = self._invert_direction(direction)
 
