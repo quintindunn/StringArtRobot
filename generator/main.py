@@ -109,12 +109,20 @@ def circle_nail_group(current_nail: int, target_nail: int):
     return instructions
 
 
+def pre_processing() -> list[BaseInstruction | str]:
+    queue = []
+
+    queue.append(servo_to_angle(parsed_args.faa, fw=True))
+
+    return queue
+
+
 def construct():
     current_nail = 0
     with open(parsed_args.i) as f:
         pins = list(map(int, f.read().split(",")))
 
-    instruction_groups = []
+    instruction_groups = pre_processing()
 
     for pin in pins[1:]:
         instruction_groups.append(f"# {current_nail} -> {pin}")
