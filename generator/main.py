@@ -1,3 +1,5 @@
+import requests
+
 from instructions import Direction, RotateTool, Sleep, BaseInstruction
 import argparse
 
@@ -15,6 +17,7 @@ def arg_parser():
     parser.add_argument("-afws", help="Arm Forward Speed", type=int, default=127)
     parser.add_argument("-tbsp", help="Table rotation speed", type=int, default=127)
     parser.add_argument("-tbcd", help="Time between table rotation and next instruction. (ms)", type=int, default=500)
+    parser.add_argument("-uploadurl", help="Url to upload the file to", type=str, default="")
 
     return parser.parse_args()
 
@@ -129,3 +132,6 @@ def dump(instruction_groups: list[str | BaseInstruction]):
 if __name__ == '__main__':
     parsed_args = arg_parser()
     dump(construct())
+    if parsed_args.uploadurl:
+        with open(parsed_args.o, 'rb') as f:
+            request = requests.post(parsed_args.uploadurl, files={"files": f})
