@@ -115,7 +115,11 @@ class RotateTool(BaseInstruction):
         # Not using direction = -direction so Direction's values can be adjusted if say we only want positive ints.
         if direction == Direction.CW:
             return Direction.CCW
-        return Direction.CCW
+
+        if direction == Direction.IGNORED:
+            return Direction.IGNORED
+
+        return Direction.CW
 
     @property
     def instruction(self) -> str:
