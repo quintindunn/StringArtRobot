@@ -1,3 +1,5 @@
+import random
+
 import requests
 
 from instructions import Direction, RotateTool, Sleep, BaseInstruction
@@ -22,7 +24,7 @@ def arg_parser():
     return parser.parse_args()
 
 
-def nail_to_angle(nail_idx: int):
+def nail_to_angle(nail_idx: int | float):
     nail_count = parsed_args.pc
     nail_spacing_deg = 360 / nail_count
     angle = nail_spacing_deg * nail_idx
@@ -40,20 +42,18 @@ def calculate_relative_rotation(nail_index_1: int, nail_index_2: int) -> tuple[f
     return theta, direction
 
 
-def move_to_nail_instruction(current_nail: int, target_nail: int, offset_angle: float = 0.0):
-    theta, direction = calculate_relative_rotation(current_nail, target_nail)
-    theta += offset_angle
-
-    return RotateTool(tool_id=parsed_args.ttid, direction=direction, speed=parsed_args.tbsp, degrees=theta)
+def move_to_nail_instruction(target_nail: int):
+    angle = nail_to_angle(target_nail)
+    return RotateTool(tool_id=parsed_args.ttid, speed=parsed_args.tbsp, degrees=angle, absolute=True)
 
 
 def servo_to_angle(deg: float, fw: bool = True):
     speed = parsed_args.afws if fw else parsed_args.abws
-    return RotateTool(tool_id=parsed_args.atid, direction=Direction.IGNORED, degrees=deg, speed=speed)
+    return RotateTool(tool_id=parsed_args.atid, degrees=deg, speed=speed, absolute=True)
 
 
-def rotate_table_degrees(degrees: int, direction: int, speed: int = 127):
-    return RotateTool(tool_id=parsed_args.ttid, degrees=degrees, direction=direction, speed=speed)
+def rotate_table_to(degrees: int, speed: int = 127):
+    return RotateTool(tool_id=parsed_args.ttid, degrees=degrees, speed=speed, absolute=True)
 
 
 def if_tbcd_sleep(instructions: list[BaseInstruction]):
@@ -61,58 +61,58 @@ def if_tbcd_sleep(instructions: list[BaseInstruction]):
         instructions.append(Sleep(duration_ms=parsed_args.tbcd))
 
 
-def circle_nail_group(current_nail: int, target_nail: int):
+def circle_nail_group(target_nail: int):
     # Go to the nail
     instructions = []
 
-    spacing = 360 / parsed_args.pc
-    d1 = Direction.CW
-    d2 = Direction.CCW
+    a1 = nail_to_angle(target_nail-0.5)
+    a2 = nail_to_angle(target_nail+0.5)
+    home = nail_to_angle(target_nail)
     fw = parsed_args.faa
     bw = parsed_args.baa
 
     # 1.) Rotate to the pin
-    instructions.append(move_to_nail_instruction(current_nail, target_nail))
+    instructions.append(home)
     if_tbcd_sleep(instructions)
 
     # 2.) Rotate `d1` spacing/2deg
-    instructions.append(rotate_table_degrees(spacing/2, d1))
+    instructions.append(rotate_table_to(a1))
     if_tbcd_sleep(instructions)
 
     # 3.) Arm from `fw`deg -> `bw`deg
     instructions.append(servo_to_angle(bw, fw=False))
 
     # 4.) Rotate `d2` `spacing`deg
-    instructions.append(rotate_table_degrees(spacing, d2))
+    instructions.append(rotate_table_to(a2))
     if_tbcd_sleep(instructions)
 
     # 5.) Arm from `bw`deg -> `fw`deg
     instructions.append(servo_to_angle(fw, fw=True))
 
     # 6.) Rotate `d1` `spacing`deg
-    instructions.append(rotate_table_degrees(spacing, d1))
+    instructions.append(rotate_table_to(a1))
     if_tbcd_sleep(instructions)
 
     # 7.) Arm from `fw`deg -> `bw`deg
     instructions.append(servo_to_angle(bw, fw=False))
 
     # 8.) Rotate `d2` `spacing`deg
-    instructions.append(rotate_table_degrees(spacing, d2))
+    instructions.append(rotate_table_to(a2))
 
     # 9.) Arm from `bw`deg to `fw`deg
     instructions.append(servo_to_angle(fw, fw=True))
 
     # 10.) Reset to initial angle.
-    instructions.append(rotate_table_degrees(spacing/2, d1))
+    instructions.append(home)
     if_tbcd_sleep(instructions)
 
     return instructions
 
 
 def pre_processing() -> list[BaseInstruction | str]:
-    queue = []
-
-    queue.append(servo_to_angle(parsed_args.faa, fw=True))
+    queue = [
+        servo_to_angle(parsed_args.faa, fw=True)
+    ]
 
     return queue
 
@@ -126,20 +126,10 @@ def construct():
 
     for pin in pins[1:]:
         instruction_groups.append(f"# {current_nail} -> {pin}")
-        instruction_groups.extend(circle_nail_group(current_nail=current_nail, target_nail=pin))
+        instruction_groups.extend(circle_nail_group(target_nail=pin))
         current_nail = pin
 
     return instruction_groups
-
-
-# TEMPORARY TO DEBUG NOT FIRMWARE NOT RECOGNIZING DIFFERENT DIRECTIONS.
-def debug_construct():
-    instructions = pre_processing()
-    for _ in range(10):
-        instructions.append(rotate_table_degrees(degrees=20, direction=Direction.CCW))
-        instructions.append(rotate_table_degrees(degrees=20, direction=Direction.CW))
-
-    return instructions
 
 
 def dump(instruction_groups: list[str | BaseInstruction]):
