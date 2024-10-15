@@ -28,7 +28,7 @@ def rotate_arm_to(degrees: float):
         rotate_arm_to.arm_angle = degrees
 
     # TODO: Implement servo rotation.
-    logger.info(f"Rotating arm to {degrees:.3f} degrees")
+    logger.info(f"Rotating arm to {degrees*90:.3f} degrees")
 
     # If we're developing without GPIO.
     if not DEV_NO_GPIO:
