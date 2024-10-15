@@ -67,7 +67,7 @@ def circle_nail_group(target_nail: int):
 
     a1 = nail_to_angle(target_nail-0.5)
     a2 = nail_to_angle(target_nail+0.5)
-    home = nail_to_angle(target_nail)
+    home = move_to_nail_instruction(target_nail)
     fw = parsed_args.faa
     bw = parsed_args.baa
 
