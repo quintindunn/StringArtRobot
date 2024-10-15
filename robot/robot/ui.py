@@ -1,11 +1,11 @@
-import threading
 from typing import Any
 from .string_bot import StringBot
-from .hardware_api import move_tbl_degrees, rotate_arm_to
-from .instructions import Direction
-
+from .hardware_api import move_tbl_degrees, rotate_arm_to, display_line, display_final, clear
 
 from pathlib import Path
+
+import os
+import threading
 
 VERSION = "0.1.0"
 
@@ -208,6 +208,12 @@ class UI:
         self.programs_page.data_indices.extend(data_indices)
 
     def update_programs(self):
+        init_size = len(CTX["programs"])
+        CTX['programs'].clear()
+        CTX['programs'].extend(os.listdir(Path("./stringart_files").absolute()))
+        if init_size != len(CTX["programs"]):
+            self.programs_page.line_idx = BASE_Y_OFFSET
+
         self.programs_page.lines.clear()
         self.programs_page.data_indices.clear()
 
@@ -266,6 +272,13 @@ class UI:
             buffer.append(line)
 
         return buffer
+
+    def display(self):
+        lines = self.get_lines()
+        clear()
+        for k, v in enumerate(lines):
+            display_line(k, v)
+        display_final()
 
     def interpret_controls(self, command):
         if command == 0:

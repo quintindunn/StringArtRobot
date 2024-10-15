@@ -29,11 +29,18 @@ def step():
     write_pin(TBL_STP_PIN, high=False)
 
 
-def move_tbl_degrees(degrees: int, direction: int):
-    if not hasattr(move_tbl_degrees, "error"):
-        move_tbl_degrees.error = 0.0
+def move_tbl_degrees(angle: int):
     if not hasattr(move_tbl_degrees, "current_angle"):
         move_tbl_degrees.current_angle = 0.0
+
+    angle_diff = (angle - move_tbl_degrees.current_angle) % 360
+
+    if angle_diff > 180:
+        steps = (360 - angle_diff) / DEG_P_STEP
+        direction = instructions.Direction.CCW
+    else:
+        steps = angle_diff / DEG_P_STEP
+        direction = instructions.Direction.CW
 
     if direction == instructions.Direction.CW:
         write_pin(pin=TBL_DIR_PIN, high=TBL_INVERT_DIRECTION)
@@ -44,43 +51,12 @@ def move_tbl_degrees(degrees: int, direction: int):
     else:
         raise InvalidDirectionException(direction)
 
-    adjusted_degrees = degrees - move_tbl_degrees.error
-
-    target_steps = (adjusted_degrees / 360.0) * STP_P_REV
-
-    steps_to_move = int(target_steps)
-
-    best_steps = steps_to_move
-    min_error = float('inf')
-
-    for steps in (steps_to_move, steps_to_move - 1):
-        actual_rotation = (steps / STP_P_REV) * 360.0
-        error_degrees = adjusted_degrees - actual_rotation
+    for _ in range(round(steps)):
+        step()
 
         if direction == instructions.Direction.CW:
-            cumulative_error = move_tbl_degrees.error - error_degrees
+            move_tbl_degrees.current_angle += DEG_P_STEP
         else:
-            cumulative_error = move_tbl_degrees.error + error_degrees
+            move_tbl_degrees.current_angle -= DEG_P_STEP
 
-        if abs(cumulative_error) < abs(min_error):
-            min_error = cumulative_error
-            best_steps = steps
-
-    steps_to_move = best_steps
-
-    for _ in range(abs(steps_to_move)):
-        dir_val = -1 if instructions.Direction.CW else 1
-        move_tbl_degrees.current_angle = (move_tbl_degrees.current_angle + dir_val * DEG_P_STEP) % 360
-
-        step()
-        sleep_micro_seconds(TBL_STP_COOLDOWN_MICRO_SECONDS)
-
-    actual_rotation = (steps_to_move / STP_P_REV) * 360.0
-
-    error_degrees = adjusted_degrees - actual_rotation
-    if direction == instructions.Direction.CW:
-        move_tbl_degrees.error -= error_degrees
-    else:
-        move_tbl_degrees.error += error_degrees
-
-    logger.debug(f"Table error: {move_tbl_degrees.error:.5f}")
+        move_tbl_degrees.current_angle %= 360
