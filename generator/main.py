@@ -1,4 +1,8 @@
-from instructions import Direction, RotateTool, BaseInstruction
+import random
+
+import requests
+
+from instructions import Direction, RotateTool, Sleep, BaseInstruction
 import argparse
 
 
@@ -7,18 +11,20 @@ def arg_parser():
     parser.add_argument("-i", help="Input file path")
     parser.add_argument("-o", help="Output file path")
     parser.add_argument("-pc", help="Number of pins.", type=int)
-    parser.add_argument("-faa", help="Forward Arm Angle.", type=float, default=150.0)
-    parser.add_argument("-baa", help="Backward Arm Angle.", type=float, default=30.0)
+    parser.add_argument("-faa", help="Forward Arm Angle.", type=float, default=10.0)
+    parser.add_argument("-baa", help="Backward Arm Angle.", type=float, default=-10.0)
     parser.add_argument("-atid", help="Arm Tool Id.", type=int, default=1)
     parser.add_argument("-ttid", help="Table Tool Id.", type=int, default=0)
     parser.add_argument("-abws", help="Arm Backward Speed", type=int, default=127)
     parser.add_argument("-afws", help="Arm Forward Speed", type=int, default=127)
     parser.add_argument("-tbsp", help="Table rotation speed", type=int, default=127)
+    parser.add_argument("-tbcd", help="Time between table rotation and next instruction. (ms)", type=int, default=500)
+    parser.add_argument("-uploadurl", help="Url to upload the file to", type=str, default="")
 
     return parser.parse_args()
 
 
-def nail_to_angle(nail_idx: int):
+def nail_to_angle(nail_idx: int | float):
     nail_count = parsed_args.pc
     nail_spacing_deg = 360 / nail_count
     angle = nail_spacing_deg * nail_idx
@@ -36,56 +42,79 @@ def calculate_relative_rotation(nail_index_1: int, nail_index_2: int) -> tuple[f
     return theta, direction
 
 
-def move_to_nail_instruction(current_nail: int, target_nail: int, offset_angle: float = 0.0):
-    theta, direction = calculate_relative_rotation(current_nail, target_nail)
-    theta += offset_angle
-
-    return RotateTool(tool_id=parsed_args.ttid, direction=direction, speed=parsed_args.tbsp, degrees=theta)
+def move_to_nail_instruction(target_nail: int):
+    angle = nail_to_angle(target_nail)
+    return RotateTool(tool_id=parsed_args.ttid, speed=parsed_args.tbsp, degrees=angle, absolute=True)
 
 
 def servo_to_angle(deg: float, fw: bool = True):
     speed = parsed_args.afws if fw else parsed_args.abws
-    return RotateTool(tool_id=parsed_args.atid, direction=Direction.IGNORED, degrees=deg, speed=speed)
+    return RotateTool(tool_id=parsed_args.atid, degrees=deg, speed=speed, absolute=True)
 
 
-def rotate_table_degrees(degrees: int, direction: int, speed: int = 127):
-    return RotateTool(tool_id=parsed_args.ttid, degrees=degrees, direction=direction, speed=speed)
+def rotate_table_to(degrees: int, speed: int = 127):
+    return RotateTool(tool_id=parsed_args.ttid, degrees=degrees, speed=speed, absolute=True)
 
 
-def circle_nail_group(current_nail: int, target_nail: int):
+def if_tbcd_sleep(instructions: list[BaseInstruction]):
+    if parsed_args.tbcd != -1:
+        instructions.append(Sleep(duration_ms=parsed_args.tbcd))
+
+
+def circle_nail_group(target_nail: int):
     # Go to the nail
     instructions = []
 
-    spacing_offset = 360 / parsed_args.pc
-    middle_offset = spacing_offset / 2
+    a1 = nail_to_angle(target_nail-0.5)
+    a2 = nail_to_angle(target_nail+0.5)
+    home = move_to_nail_instruction(target_nail)
+    fw = parsed_args.faa
+    bw = parsed_args.baa
 
-    # seq: A
-    instructions.append(RotateTool(tool_id=parsed_args.atid, degrees=parsed_args.baa, direction=Direction.IGNORED,
-                                   speed=parsed_args.abws))
-    # seq: B
-    instructions.append(move_to_nail_instruction(current_nail, target_nail, -middle_offset))
+    # 1.) Rotate to the pin
+    instructions.append(home)
+    if_tbcd_sleep(instructions)
 
-    # seq: C
-    instructions.append(servo_to_angle(parsed_args.faa))
+    # 2.) Rotate `d1` spacing/2deg
+    instructions.append(rotate_table_to(a1))
+    if_tbcd_sleep(instructions)
 
-    # seq: D
-    instructions.append(rotate_table_degrees(middle_offset * 2, instructions[1].direction, speed=parsed_args.tbsp))
+    # 3.) Arm from `fw`deg -> `bw`deg
+    instructions.append(servo_to_angle(bw, fw=False))
 
-    # seq: E
-    instructions.append(servo_to_angle(parsed_args.baa, fw=False))
+    # 4.) Rotate `d2` `spacing`deg
+    instructions.append(rotate_table_to(a2))
+    if_tbcd_sleep(instructions)
 
-    # seq: F
-    b_dir = instructions[1].direction
-    inv_direction = Direction.CCW if b_dir == Direction.CCW else Direction.CW if b_dir == Direction.CW else b_dir
-    instructions.append(rotate_table_degrees(middle_offset * 2, inv_direction, speed=parsed_args.tbsp))
+    # 5.) Arm from `bw`deg -> `fw`deg
+    instructions.append(servo_to_angle(fw, fw=True))
 
-    # seq: G
-    instructions.append(servo_to_angle(parsed_args.faa, fw=True))
+    # 6.) Rotate `d1` `spacing`deg
+    instructions.append(rotate_table_to(a1))
+    if_tbcd_sleep(instructions)
 
-    # seq: H
-    instructions.append(rotate_table_degrees(middle_offset, b_dir, speed=parsed_args.tbsp))
+    # 7.) Arm from `fw`deg -> `bw`deg
+    instructions.append(servo_to_angle(bw, fw=False))
+
+    # 8.) Rotate `d2` `spacing`deg
+    instructions.append(rotate_table_to(a2))
+
+    # 9.) Arm from `bw`deg to `fw`deg
+    instructions.append(servo_to_angle(fw, fw=True))
+
+    # 10.) Reset to initial angle.
+    instructions.append(home)
+    if_tbcd_sleep(instructions)
 
     return instructions
+
+
+def pre_processing() -> list[BaseInstruction | str]:
+    queue = [
+        servo_to_angle(parsed_args.faa, fw=True)
+    ]
+
+    return queue
 
 
 def construct():
@@ -93,11 +122,11 @@ def construct():
     with open(parsed_args.i) as f:
         pins = list(map(int, f.read().split(",")))
 
-    instruction_groups = []
+    instruction_groups = pre_processing()
 
     for pin in pins[1:]:
         instruction_groups.append(f"# {current_nail} -> {pin}")
-        instruction_groups.extend(circle_nail_group(current_nail=current_nail, target_nail=pin))
+        instruction_groups.extend(circle_nail_group(target_nail=pin))
         current_nail = pin
 
     return instruction_groups
@@ -111,3 +140,6 @@ def dump(instruction_groups: list[str | BaseInstruction]):
 if __name__ == '__main__':
     parsed_args = arg_parser()
     dump(construct())
+    if parsed_args.uploadurl:
+        with open(parsed_args.o, 'rb') as f:
+            request = requests.post(parsed_args.uploadurl, files={"files": f})

@@ -2,3 +2,4 @@ pillow>=10.4.0
 threadArt==1.2.0
 opencv-python
 flask
+requests
