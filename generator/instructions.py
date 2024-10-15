@@ -1,13 +1,12 @@
 """
 # DOCUMENTATION:
-## Rotate Tool:
+## Rotate Table:
     ### Parameters:
-        * tool_id - The id of the tool to rotate
         * degrees - How many degrees to rotate
         * direction - Which direction to rotate (Direction.CW | Direction.CCW)
         * speed - 0-255 How quickly to rotate the table
     ### Instruction:
-        * ROT i<tool_id> d<direction> a<degrees> s<speed>
+        * ROT d<direction> a<degrees> s<speed>
 
 ## Place Nail:
     ### Parameters:
@@ -15,6 +14,15 @@
         * rs - 0-255 How quickly to retract the tool
     ### Instruction:
         * PN p<ps> r<rs>
+
+## Move Tool:
+    ### Parameters:
+        * tool_id - The numerical ID of the tool
+        * delta_x - The change in the `x` value
+        * delta_y - The change in the `y` value
+        * speed - 0-255 How quickly to move the tool
+    ### Instruction:
+        * MT i<tool_id> x<delta_x> y<delta_y> s<speed>
 
 ## Beep:
     ### Parameters:
@@ -36,24 +44,17 @@ class Direction:
     CW = 1
     CCW = -1
 
-    IGNORED = 0
-
     UP = 1
     DOWN = -1
 
 
 class BaseInstruction:
-    @property
-    def instruction(self):
-        return ""
-
-    def __repr__(self):
-        return self.instruction
+    ...
 
 
-class RotateTool(BaseInstruction):
-    def __init__(self, tool_id: int, degrees: float, direction: int, speed: int):
-        if direction not in (Direction.CW, Direction.CCW, Direction.IGNORED):
+class RotateTable(BaseInstruction):
+    def __init__(self, degrees: float, direction: int, speed: int):
+        if direction not in (Direction.CW, Direction.CCW):
             raise ValueError(f"Direction \"{direction}\" not recognized")
 
         if degrees > 0:
@@ -66,22 +67,17 @@ class RotateTool(BaseInstruction):
         self.direction = direction
         self.degrees = degrees
         self.speed = speed
-        self.tool_id = tool_id
 
     @staticmethod
     def _invert_direction(direction):
         # Not using direction = -direction so Direction's values can be adjusted if say we only want positive ints.
         if direction == Direction.CW:
             return Direction.CCW
-
-        if direction == Direction.IGNORED:
-            return Direction.IGNORED
-
         return Direction.CCW
 
     @property
     def instruction(self) -> str:
-        return f"ROT i{self.tool_id} d{self.direction} a{self.degrees} s{self.speed}"
+        return f"ROT d{self.direction} a{self.degrees} s{self.speed}"
 
 
 class PlaceNail(BaseInstruction):
@@ -98,8 +94,22 @@ class PlaceNail(BaseInstruction):
     def instruction(self) -> str:
         return f"PN p{self.place_speed} r{self.retraction_speed}"
 
-    def __str__(self):
-        return self.instruction
+
+class MoveTool(BaseInstruction):
+    def __init__(self, tool_id: int, delta_x: float, delta_y: float, speed: int):
+        if speed not in range(1, 255):
+            speed = abs(speed)
+            delta_x = -delta_x
+            delta_y = -delta_y
+
+        self.tool_id = tool_id
+        self.speed = speed
+        self.delta_x = delta_x
+        self.delta_y = delta_y
+
+    @property
+    def instruction(self):
+        return f"MT i{self.tool_id} x{self.delta_x} y{self.delta_y} s{self.speed}"
 
 
 class Beep(BaseInstruction):
@@ -123,9 +133,6 @@ class Beep(BaseInstruction):
     def instruction(self):
         return f"BP d{self.duration} r{self.repeat} o{self.off_time}"
 
-    def __str__(self):
-        return self.instruction
-
 
 class Sleep(BaseInstruction):
     def __init__(self, duration_ms: int):
@@ -137,6 +144,3 @@ class Sleep(BaseInstruction):
     @property
     def instruction(self):
         return f"SP d{self.duration}"
-
-    def __str__(self):
-        return self.instruction
