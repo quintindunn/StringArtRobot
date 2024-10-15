@@ -1,0 +1,27 @@
+* {
+}
+
+.body {
+    margin: 1vh 1vw;
+
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+form {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-content: center;
+    text-align: center;
+}
+
+form > * {
+    position: relative;
+
+    left: 42.5vw;
+    width: 15vw
+}
