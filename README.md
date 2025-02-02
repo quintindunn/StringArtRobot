@@ -1,7 +1,7 @@
 # StringArtRobot
 
 ### **\*Important\***
-### This project is NOT completed, nor is it tested yet. I would not recommend building it, unless you've gone over everything and too agree it will work, even then that's do it at your own risk!
+### This project is NOT completed, and is going through more revisions. I would not recommend building it, unless you've gone over everything and too agree it will work, even then that's do it at your own risk!
 
 ## About
 This is a project to automatically make string art from an input image. I got the idea for this project from [this](https://www.youtube.com/watch?v=WGccIFf6MF8&ab_channel=VirtuallyPassed) YouTube video by [Virtually Passed](https://www.youtube.com/@virtually_passed).
